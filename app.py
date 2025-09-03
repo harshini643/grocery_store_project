@@ -31,6 +31,29 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate=Migrate(app,db)
 
+def init_db():
+    """Create all tables and seed initial data"""
+    with app.app_context():
+        db.create_all()
+        print("Database tables created/verified.")
+
+        # Optionally, seed admin user or products as you already wrote
+        try:
+            if not User.query.filter_by(username='admin').first():
+                admin = User(
+                    name='Administrator',
+                    username='admin', 
+                    email='admin@grocery.com',
+                    address='Admin Office',
+                    contact_number='1234567890'
+                )
+                admin.set_password('admin123')
+                db.session.add(admin)
+                db.session.commit()
+                print("Admin user created.")
+        except Exception as e:
+            print(f"Error creating admin: {e}")
+
 @app.before_serving
 def create_tables():
     db.create_all()
@@ -654,4 +677,5 @@ if __name__ == '__main__':
     app.secret_key = app.config['SECRET_KEY']
     with app.app_context():
          db.create_all()
+         init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)

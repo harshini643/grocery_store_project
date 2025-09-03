@@ -4,7 +4,7 @@ import uuid
 import json
 from datetime import datetime,timedelta
 from flask_migrate import Migrate
-
+import flask
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,6 +14,9 @@ shared_wishlists = {}
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_PATH = os.path.abspath(os.path.join(BASE_DIR, '..', 'instance', 'grocery.db'))
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+
+print("Flask version:", flask.__version__)
+
 
 app = Flask(
     __name__,

@@ -27,8 +27,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate=Migrate(app,db)
-with app.app_context():
-    db.create_all()
+
 # -------------------- Models --------------------
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -646,5 +645,5 @@ def api_products():
 if __name__ == '__main__':
     app.secret_key = app.config['SECRET_KEY']
     with app.app_context():
-        init_db()
+         db.create_all()
     app.run(host='0.0.0.0', port=5000, debug=True)

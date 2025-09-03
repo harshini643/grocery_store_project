@@ -54,9 +54,6 @@ def init_db():
         except Exception as e:
             print(f"Error creating admin: {e}")
 
-@app.before_serving
-def create_tables():
-    db.create_all()
 
 
 # -------------------- Models --------------------

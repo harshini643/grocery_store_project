@@ -1,4 +1,10 @@
 Flask==3.0.3
 Flask-SQLAlchemy==3.1.1
-Werkzeug==3.0.3
+Flask-Migrate==4.1.0   # only if you want migrations
+Flask-Cors==6.0.1      # only if you use CORS
 gunicorn==22.0.0
+SQLAlchemy==2.0.41
+Werkzeug==3.0.3
+Jinja2==3.1.6
+itsdangerous==2.2.0
+click==8.2.1

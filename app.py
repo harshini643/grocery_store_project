@@ -28,6 +28,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate=Migrate(app,db)
 
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
+
 # -------------------- Models --------------------
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)

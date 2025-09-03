@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Admin Dashboard</h1>
+<section class="admin-grid">
+  <div class="admin-card">
+    <h3>Add New Product</h3>
+    <form method="post" action="{{ url_for('admin_product_new') }}" class="admin-form">
+      <label>Name<input type="text" name="name" required></label>
+      <label>Price<input type="number" name="price" step="0.01" required></label>
+      <label>Category<input type="text" name="category" placeholder="Fruits, Dairy, etc."></label>
+      <label>Stock<input type="number" name="stock" value="100"></label>
+      <label>Image URL<input type="url" name="image_url" placeholder="https://example.com/myimage.jpg" ></label>
+      <label>Description<textarea name="description" rows="3"></textarea></label>
+      <button type="submit">Create</button>
+    </form>
+  </div>
+
+  <div class="admin-card">
+    <h3>Products</h3>
+    <table class="admin-table">
+      <thead><tr><th>ID</th><th>Preview</th><th>Name</th><th>Price</th><th>Category</th><th>Stock</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for p in products %}
+        <tr>
+          <td>{{ p.id }}</td>
+          <td><img src="{{ p.image_url }}" alt="" class="admin-thumb" onerror="this.onerror=null;this.src='https://via.placeholder.com/120x80?text=No+Image'"></td>
+          <td>{{ p.name }}</td>
+          <td>₹{{ '%.2f'|format(p.price) }}</td>
+          <td>{{ p.category }}</td>
+          <td>{{ p.stock }}</td>
+          <td>
+            <details>
+              <summary>Edit</summary>
+              <form method="post" action="{{ url_for('admin_product_update', pid=p.id) }}" class="inline-form">
+                <input type="text" name="name" value="{{ p.name }}">
+                <input type="number" name="price" step="0.01" value="{{ p.price }}">
+                <input type="text" name="category" value="{{ p.category }}">
+                <input type="number" name="stock" value="{{ p.stock }}">
+                <input type="url" name="image_url" value="{{ p.image_url }}">
+                <textarea name="description" rows="2">{{ p.description }}</textarea>
+                <button type="submit">Save</button>
+              </form>
+            </details>
+            <form method="post" action="{{ url_for('admin_product_delete', pid=p.id) }}" class="inline-form">
+              <button type="submit" class="danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

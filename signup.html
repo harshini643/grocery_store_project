@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card signup-card">
+        <h2>Create Account</h2>
+        <p class="auth-subtitle">Fill in your details to create a new account</p>
+        
+        <form class="auth-form" method="post" action="{{ url_for('signup') }}">
+            <div class="form-group">
+                <label for="name">Full Name <span class="required">*</span></label>
+                <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                <span class="form-error" id="name-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" value="{{ email }}" required>
+                <span class="form-error" id="email-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label for="contact_number">Contact Number <span class="required">*</span></label>
+                <input type="tel" id="contact_number" name="contact_number" placeholder="Enter your contact number" required>
+                <span class="form-error" id="contact-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label for="address">Address <span class="required">*</span></label>
+                <textarea id="address" name="address" rows="3" placeholder="Enter your full address" required></textarea>
+                <span class="form-error" id="address-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password <span class="required">*</span></label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                <div class="password-requirements">
+                    <small>Password must contain:</small>
+                    <ul class="requirements-list">
+                        <li id="length">At least 8 characters</li>
+                        <li id="uppercase">One uppercase letter</li>
+                        <li id="lowercase">One lowercase letter</li>
+                        <li id="number">One number</li>
+                        <li id="special">One special character (!@#$%^&*)</li>
+                    </ul>
+                </div>
+                <span class="form-error" id="password-error"></span>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Create Account</button>
+        </form>
+        
+        <div class="auth-divider">
+            <span>Already have an account?</span>
+        </div>
+        
+        <a href="{{ url_for('login') }}" class="btn btn-secondary">Login Instead</a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.auth-form');
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const contactInput = document.getElementById('contact_number');
+    const addressInput = document.getElementById('address');
+    const passwordInput = document.getElementById('password');
+    
+    // Error elements
+    const nameError = document.getElementById('name-error');
+    const emailError = document.getElementById('email-error');
+    const contactError = document.getElementById('contact-error');
+    const addressError = document.getElementById('address-error');
+    const passwordError = document.getElementById('password-error');
+    
+    // Password requirement elements
+    const lengthReq = document.getElementById('length');
+    const uppercaseReq = document.getElementById('uppercase');
+    const lowercaseReq = document.getElementById('lowercase');
+    const numberReq = document.getElementById('number');
+    const specialReq = document.getElementById('special');
+    
+    // Validation functions
+    function validateEmail(email) {
+        const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailPattern.test(email);
+    }
+    
+    function validatePassword(password) {
+        return {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /\d/.test(password),
+            special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+        };
+    }
+    
+    function validateContactNumber(contact) {
+        const contactPattern = /^[\+]?[1-9][\d]{6,15}$/;
+        return contactPattern.test(contact.replace(/[\s\-\(\)]/g, ''));
+    }
+    
+    // Real-time validation for password
+    passwordInput.addEventListener('input', function() {
+        const reqs = validatePassword(this.value);
+        lengthReq.style.color = reqs.length ? "green" : "red";
+        uppercaseReq.style.color = reqs.uppercase ? "green" : "red";
+        lowercaseReq.style.color = reqs.lowercase ? "green" : "red";
+        numberReq.style.color = reqs.number ? "green" : "red";
+        specialReq.style.color = reqs.special ? "green" : "red";
+    });
+    
+    // Validate before submit
+    form.addEventListener('submit', function(e) {
+        let valid = true;
+
+        // Name
+        if (nameInput.value.trim().length < 2) {
+            nameError.textContent = "Please enter your full name.";
+            valid = false;
+        } else {
+            nameError.textContent = "";
+        }
+
+        // Email
+        if (!validateEmail(emailInput.value.trim())) {
+            emailError.textContent = "Please enter a valid email.";
+            valid = false;
+        } else {
+            emailError.textContent = "";
+        }
+
+        // Contact
+        if (!validateContactNumber(contactInput.value.trim())) {
+            contactError.textContent = "Please enter a valid contact number.";
+            valid = false;
+        } else {
+            contactError.textContent = "";
+        }
+
+        // Address
+        if (addressInput.value.trim().length < 10) {
+            addressError.textContent = "Please enter your complete address.";
+            valid = false;
+        } else {
+            addressError.textContent = "";
+        }
+
+        // Password
+        const pwReqs = validatePassword(passwordInput.value);
+        if (!pwReqs.length || !pwReqs.uppercase || !pwReqs.lowercase || !pwReqs.number || !pwReqs.special) {
+            passwordError.textContent = "Password does not meet the requirements.";
+            valid = false;
+        } else {
+            passwordError.textContent = "";
+        }
+
+        if (!valid) {
+            e.preventDefault(); // stop form submission
+        }
+    });
+});
+</script>
+{% endblock %}

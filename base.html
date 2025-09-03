@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery Store</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="{{ url_for('index') }}">🛒 Grocery Store</a>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="nav-search">
+                <form method="GET" action="{{ url_for('index') }}" class="search-form">
+                    <input type="text" name="q" placeholder="Search products..." value="{{ request.args.get('q', '') }}">
+                    <button type="submit">🔍</button>
+                </form>
+            </div>
+            
+            <!-- Navigation Links -->
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+                <div class="nav-dropdown">
+                    <span class="nav-link dropdown-toggle">Categories ▾</span>
+                    <div class="dropdown-menu">
+                        <a href="{{ url_for('index') }}" class="dropdown-item">All Products</a>
+                        {% if categories %}
+                            {% for cat in categories %}
+                                <a href="{{ url_for('index', category=cat) }}" class="dropdown-item">{{ cat }}</a>
+                            {% endfor %}
+                        {% else %}
+                            <a href="{{ url_for('index', category='Fruits') }}" class="dropdown-item">Fruits</a>
+                            <a href="{{ url_for('index', category='Bakery') }}" class="dropdown-item">Bakery</a>
+                            <a href="{{ url_for('index', category='Dairy') }}" class="dropdown-item">Dairy</a>
+                            <a href="{{ url_for('index', category='Grains') }}" class="dropdown-item">Grains</a>
+                            <a href="{{ url_for('index', category='Vegetables') }}" class="dropdown-item">Vegetables</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if session.get('user') %}
+                    <a href="{{ url_for('wishlist') }}" class="nav-link">❤️ Wishlist</a>
+                {% endif %}
+                <a href="{{ url_for('cart_view') }}" class="nav-link cart-link">
+                    🛒 Cart 
+                    {% set cart_count = session.get('cart', {}) | length %}
+                    {% if cart_count > 0 %}
+                        <span class="cart-badge">{{ cart_count }}</span>
+                    {% endif %}
+                </a>
+                {% if session.get('user') %}
+                    <span class="nav-link">Welcome, {{ session.get('user') }}!</span>
+                    <a href="{{ url_for('logout') }}" class="nav-link btn-logout">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link btn-auth">Login</a>
+                {% endif %}
+            </div>
+            
+            <!-- Mobile Menu Toggle -->
+            <div class="mobile-menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="flash-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">
+                    {{ message }}
+                    <button class="flash-close">&times;</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2025 Grocery Store. All rights reserved.</p>
+            <p>Fresh groceries delivered to your doorstep!</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile menu toggle
+        document.querySelector('.mobile-menu-toggle').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
+
+        // Flash message auto-hide and close
+        document.querySelectorAll('.flash').forEach(flash => {
+            setTimeout(() => {
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 300);
+            }, 5000);
+            
+            const closeBtn = flash.querySelector('.flash-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    flash.style.opacity = '0';
+                    setTimeout(() => flash.remove(), 300);
+                });
+            }
+        });
+
+        // Dropdown hover functionality
+        const dropdown = document.querySelector('.nav-dropdown');
+        dropdown.addEventListener('mouseenter', () => dropdown.classList.add('active'));
+        dropdown.addEventListener('mouseleave', () => dropdown.classList.remove('active'));
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="cart-container">
+    <h1>Your Shopping Cart 🛒</h1>
+
+    {% if items and items|length > 0 %}
+        <div class="cart-items">
+            {% for item in items %}
+                <div class="cart-item">
+                    <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" class="cart-item-image">
+                    <div class="cart-item-details">
+                        <h3>{{ item.product.name }}</h3>
+                        <p class="category">{{ item.product.category }}</p>
+                        <p class="price">₹{{ '%.2f'|format(item.product.price) }} each</p>
+                    </div>
+                    <div class="cart-item-quantity">
+                        <form method="post" action="{{ url_for('update_cart', pid=item.product.id) }}" class="quantity-form">
+                            <label>Qty:</label>
+                            <input type="number" name="quantity" value="{{ item.qty }}" min="1" onchange="this.form.submit()">
+                        </form>
+                    </div>
+                    <div class="cart-item-total">
+                        <p class="subtotal">₹{{ '%.2f'|format(item.subtotal) }}</p>
+                        <form method="post" action="{{ url_for('remove_from_cart', pid=item.product.id) }}">
+                            <button type="submit" class="btn btn-remove">Remove</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="cart-summary">
+            <div class="total-section">
+                <h3>Grand Total: ₹{{ '%.2f'|format(total) }}</h3>
+                <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-checkout">Proceed to Checkout</a>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="empty-cart">
+            <div class="empty-cart-icon">🛒</div>
+            <h2>Your cart is empty</h2>
+            <p>Add some delicious items from our store!</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Continue Shopping</a>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

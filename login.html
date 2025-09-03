@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Login</h2>
+        <p class="auth-subtitle">Enter your credentials to access your account</p>
+        
+        <form class="auth-form" method="post" action="{{ url_for('login') }}">
+            <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                <span class="form-error" id="email-error"></span>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password <span class="required">*</span></label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                <span class="form-error" id="password-error"></span>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+        
+        <div class="auth-divider">
+            <span>Don't have an account?</span>
+        </div>
+        
+        <a href="{{ url_for('signup') }}" class="btn btn-secondary">Create New Account</a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.auth-form');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const emailError = document.getElementById('email-error');
+    const passwordError = document.getElementById('password-error');
+    
+    // Email validation
+    function validateEmail(email) {
+        const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailPattern.test(email);
+    }
+    
+    // Real-time validation
+    emailInput.addEventListener('blur', function() {
+        const email = this.value.trim();
+        if (email && !validateEmail(email)) {
+            emailError.textContent = 'Please enter a valid email.';
+            this.classList.add('error');
+        } else {
+            emailError.textContent = '';
+            this.classList.remove('error');
+        }
+    });
+    
+    passwordInput.addEventListener('blur', function() {
+        const password = this.value.trim();
+        if (password === '') {
+            passwordError.textContent = 'Password is required.';
+            this.classList.add('error');
+        } else {
+            passwordError.textContent = '';
+            this.classList.remove('error');
+        }
+    });
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+        
+        // Clear previous errors
+        emailError.textContent = '';
+        passwordError.textContent = '';
+        emailInput.classList.remove('error');
+        passwordInput.classList.remove('error');
+        
+        // Validate email
+        if (!email) {
+            emailError.textContent = 'Email is required.';
+            emailInput.classList.add('error');
+            isValid = false;
+        } else if (!validateEmail(email)) {
+            emailError.textContent = 'Please enter a valid email.';
+            emailInput.classList.add('error');
+            isValid = false;
+        }
+        
+        // Validate password
+        if (!password) {
+            passwordError.textContent = 'Password is required.';
+            passwordInput.classList.add('error');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+
+<style>
+.auth-divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e9ecef;
+}
+
+.auth-divider span {
+    background: white;
+    padding: 0 1rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: #4CAF50;
+    border: 2px solid #4CAF50;
+    width: 100%;
+}
+
+.btn-secondary:hover {
+    background: #4CAF50;
+    color: white;
+}
+
+.required {
+    color: #ff4757;
+}
+
+.form-error {
+    color: #ff4757;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+    display: block;
+    min-height: 1.2rem;
+}
+
+.form-group input.error {
+    border-color: #ff4757;
+}
+
+.form-group input.error:focus {
+    border-color: #ff4757;
+    box-shadow: 0 0 0 2px rgba(255, 71, 87, 0.2);
+}
+</style>
+{% endblock %}

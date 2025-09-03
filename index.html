@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Grocery Store</h2>
+    <div class="products">
+        {% for product in products %}
+        <div class="product-card">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+            <h3>{{ product.name }}</h3>
+            <p class="category">{{ product.category }}</p>
+            <p class="description">{{ product.description }}</p>
+            <p class="price">Price: ₹{{ "%.2f"|format(product.price) }}</p>
+            
+            <!-- Cart and Wishlist Actions -->
+            <div class="product-actions">
+                <form method="post" action="{{ url_for('add_to_cart', pid=product.id) }}" style="flex: 1;">
+                    <input type="number" name="quantity" value="1" min="1" style="width: 45px; margin-right: 0.5rem;">
+                    <button type="submit" class="btn btn-cart">Add to Cart</button>
+                </form>
+                
+                {% if session.get('user_id') %}
+                    {% if product.id in user_wishlist %}
+                        <form method="post" action="{{ url_for('remove_from_wishlist', pid=product.id) }}" style="flex: 1;">
+                            <button type="submit" class="btn btn-wishlist-remove">♥ Remove</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{{ url_for('add_to_wishlist', pid=product.id) }}" style="flex: 1;">
+                            <button type="submit" class="btn btn-wishlist-add">♡ Wishlist</button>
+                        </form>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-wishlist-login">♡ Wishlist</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+/* Additional styles for product actions */
+.product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0 0.8rem 0.8rem;
+}
+
+.product-actions form {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-cart {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.btn-cart:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(76, 175, 80, 0.4);
+}
+
+.btn-wishlist-add {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    flex: 1;
+}
+
+.btn-wishlist-add:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(255, 107, 53, 0.4);
+}
+
+.btn-wishlist-remove {
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.btn-wishlist-remove:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(244, 67, 54, 0.4);
+}
+
+.btn-wishlist-login {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    flex: 1;
+}
+
+.btn-wishlist-login:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(108, 117, 125, 0.4);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .product-actions {
+        flex-direction: column;
+    }
+    
+    .product-actions form {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

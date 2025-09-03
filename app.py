@@ -4,7 +4,7 @@ import uuid
 import json
 from datetime import datetime,timedelta
 from flask_migrate import Migrate
-import flask
+
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,9 +14,6 @@ shared_wishlists = {}
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_PATH = os.path.abspath(os.path.join(BASE_DIR, '..', 'instance', 'grocery.db'))
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-
-print("Flask version:", flask.__version__)
-
 
 app = Flask(
     __name__,
@@ -30,31 +27,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate=Migrate(app,db)
-
-def init_db():
-    """Create all tables and seed initial data"""
-    with app.app_context():
-        db.create_all()
-        print("Database tables created/verified.")
-
-        # Optionally, seed admin user or products as you already wrote
-        try:
-            if not User.query.filter_by(username='admin').first():
-                admin = User(
-                    name='Administrator',
-                    username='admin', 
-                    email='admin@grocery.com',
-                    address='Admin Office',
-                    contact_number='1234567890'
-                )
-                admin.set_password('admin123')
-                db.session.add(admin)
-                db.session.commit()
-                print("Admin user created.")
-        except Exception as e:
-            print(f"Error creating admin: {e}")
-
-
 
 # -------------------- Models --------------------
 class User(db.Model):
@@ -106,8 +78,6 @@ class SharedCart(db.Model):
     cart_data = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Add these models to your existing models or in app.py after your existing Product model
-
 class Wishlist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -119,7 +89,7 @@ class Wishlist(db.Model):
     product = db.relationship('Product', backref=db.backref('wishlist_items', lazy=True))
     
     # Ensure unique combination of user_id and product_id
-    _table_args_ = (db.UniqueConstraint('user_id', 'product_id', name='unique_user_product'),)
+    __table_args__ = (db.UniqueConstraint('user_id', 'product_id', name='unique_user_product'),)
 
 class SharedWishlist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -132,8 +102,6 @@ class SharedWishlist(db.Model):
     # Relationship
     user = db.relationship('User', backref=db.backref('shared_wishlists', lazy=True))
 
-
-
 class Charity(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False)
@@ -141,6 +109,78 @@ class Charity(db.Model):
     website = db.Column(db.String(255), default='')
     active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# -------------------- Database Initialization --------------------
+def init_db():
+    """Initialize database with tables and seed data"""
+    with app.app_context():
+        db.create_all()
+        print("Database tables created/verified.")
+        
+        try:
+            if not User.query.filter_by(username='admin').first():
+                admin = User(
+                    name='Administrator',
+                    username='admin', 
+                    email='admin@grocery.com',
+                    address='Admin Office',
+                    contact_number='1234567890'
+                )
+                admin.set_password('admin123')
+                db.session.add(admin)
+                db.session.commit()
+                print("Admin user created.")
+            else:
+                print("Admin user already exists.")
+        except Exception as e:
+            print(f"Error with admin user: {e}")
+            db.session.rollback()
+        
+        try:
+            if Product.query.count() == 0:
+                seed_products = [
+                    Product(name='Fresh Apples (1kg)', description='Crisp and sweet red apples.', price=120.0, category='Fruits', image_url='https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/800px-Red_Apple.jpg'),
+                    Product(name='Bananas (1 dozen)', description='Ripe bananas full of potassium.', price=60.0, category='Fruits',  image_url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiph_r-pTwfrGBghkxIdd3PEz0Z_oqH7wTeA&s'),
+                    Product(name='Whole Wheat Bread', description='Soft and healthy bread loaf.', price=45.0, category='Bakery', image_url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3tzH2DPXSqmbOn3ygcB5KI5q-CIMbY3aQqA&s'),
+                    Product(name='Organic Milk (1L)', description='Farm fresh organic milk.', price=70.0, category='Dairy', image_url='https://mea.arla.com/4970d5/globalassets/arla-organic-milk/general/arla_organic_milk-product_range.jpg'),
+                    Product(name='Brown Eggs (12pc)', description='Free-range brown eggs.', price=85.0, category='Dairy', image_url='https://cdn.britannica.com/94/151894-050-F72A5317/Brown-eggs.jpg'),
+                    Product(name='Basmati Rice (5kg)', description='Long-grain aromatic rice.', price=520.0, category='Grains', image_url='https://flourworks.in/wp-content/uploads/2023/06/1-12.jpeg'), 
+                    Product(name='Notebook (200 pages)', description='College ruled notebook.', price=50.0, category='Stationary', image_url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgONwv10P8D4pN_96QMbOVUlG63DXVFPgpHg&s'),
+                    Product(name='Ballpoint Pen (Pack of 5)', description='Smooth writing pens.', price=30.0, category='Stationary', image_url='https://static2.jetpens.com/images/a/000/253/253360.jpg?s=4378aba1d97fd5134ee408f1e42e5e9c'),
+                    Product(name='Fresh Carrots (1kg)', description='Organic carrots.', price=40.0, category='Vegetables', image_url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWp3Vx2S_zSSRoLboLpODBfF2QR-HOXcKFKg&s'),
+                    Product(name='Tomatoes (1kg)', description='Fresh red tomatoes.', price=35.0, category='Vegetables', image_url='https://media.post.rvohealth.io/wp-content/uploads/2020/09/AN313-Tomatoes-732x549-Thumb.jpg'),
+                ]
+                db.session.bulk_save_objects(seed_products)
+                db.session.commit()
+                print("Sample products added.")
+            else:
+                print("Products already exist in database.")
+        except Exception as e:
+            print(f"Error seeding products: {e}")
+            db.session.rollback()
+        
+        # Add sample charities
+        try:
+            if Charity.query.count() == 0:
+                sample_charities = [
+                    Charity(name='Feed the Hungry', description='Providing meals to underprivileged families', website='https://feedthehungry.org'),
+                    Charity(name='Education for All', description='Supporting education for disadvantaged children', website='https://educationforall.org'),
+                    Charity(name='Clean Water Foundation', description='Bringing clean water to rural communities', website='https://cleanwater.org'),
+                    Charity(name='Medical Aid Society', description='Providing healthcare to those in need', website='https://medicalaid.org'),
+                    Charity(name='Environmental Care', description='Protecting our environment for future generations', website='https://environmentalcare.org'),
+                ]
+                db.session.bulk_save_objects(sample_charities)
+                db.session.commit()
+                print("Sample charities added.")
+            else:
+                print("Charities already exist in database.")
+        except Exception as e:
+            print(f"Error seeding charities: {e}")
+            db.session.rollback()
+
+# Initialize database when app starts
+with app.app_context():
+    init_db()
 
 # -------------------- Authentication Helper --------------------
 def login_required(f):
@@ -174,71 +214,6 @@ def is_strong_password(password):
     return has_upper and has_lower and has_digit and has_special
 
 # -------------------- Helpers --------------------
-def init_db():
-    db.create_all()
-    print("Database tables created/verified.")
-    
-    try:
-        if not User.query.filter_by(username='admin').first():
-            admin = User(
-                name='Administrator',
-                username='admin', 
-                email='admin@grocery.com',
-                address='Admin Office',
-                contact_number='1234567890'
-            )
-            admin.set_password('admin123')
-            db.session.add(admin)
-            db.session.commit()
-            print("Admin user created.")
-        else:
-            print("Admin user already exists.")
-    except Exception as e:
-        print(f"Error with admin user: {e}")
-        print("This might be due to schema mismatch. Please delete the database file manually.")
-        print(f"Database location: {DB_PATH}")
-        return
-    
-    try:
-        if Product.query.count() == 0:
-            seed_products = [
-                Product(name='Fresh Apples (1kg)', description='Crisp and sweet red apples.', price=120.0, category='Fruits', image_url='https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/800px-Red_Apple.jpg'),
-                Product(name='Bananas (1 dozen)', description='Ripe bananas full of potassium.', price=60.0, category='Fruits',  image_url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiph_r-pTwfrGBghkxIdd3PEz0Z_oqH7wTeA&s'),
-                Product(name='Whole Wheat Bread', description='Soft and healthy bread loaf.', price=45.0, category='Bakery', image_url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS3tzH2DPXSqmbOn3ygcB5KI5q-CIMbY3aQqA&s'),
-                Product(name='Organic Milk (1L)', description='Farm fresh organic milk.', price=70.0, category='Dairy', image_url='https://mea.arla.com/4970d5/globalassets/arla-organic-milk/general/arla_organic_milk-product_range.jpg'),
-                Product(name='Brown Eggs (12pc)', description='Free-range brown eggs.', price=85.0, category='Dairy', image_url='https://cdn.britannica.com/94/151894-050-F72A5317/Brown-eggs.jpg'),
-                Product(name='Basmati Rice (5kg)', description='Long-grain aromatic rice.', price=520.0, category='Grains', image_url='https://flourworks.in/wp-content/uploads/2023/06/1-12.jpeg'), 
-                Product(name='Notebook (200 pages)', description='College ruled notebook.', price=50.0, category='Stationary', image_url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSgONwv10P8D4pN_96QMbOVUlG63DXVFPgpHg&s'),
-                Product(name='Ballpoint Pen (Pack of 5)', description='Smooth writing pens.', price=30.0, category='Stationary', image_url='https://static2.jetpens.com/images/a/000/253/253360.jpg?s=4378aba1d97fd5134ee408f1e42e5e9c'),
-                Product(name='Fresh Carrots (1kg)', description='Organic carrots.', price=40.0, category='Vegetables', image_url='https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWp3Vx2S_zSSRoLboLpODBfF2QR-HOXcKFKg&s'),
-                Product(name='Tomatoes (1kg)', description='Fresh red tomatoes.', price=35.0, category='Vegetables', image_url='https://media.post.rvohealth.io/wp-content/uploads/2020/09/AN313-Tomatoes-732x549-Thumb.jpg'),
-            ]
-            db.session.bulk_save_objects(seed_products)
-            db.session.commit()
-            print("Sample products added.")
-        else:
-            print("Products already exist in database.")
-    except Exception as e:
-        print(f"Error seeding products: {e}")
-    
-    # Add sample charities
-    try:
-        if Charity.query.count() == 0:
-            sample_charities = [
-                Charity(name='Feed the Hungry', description='Providing meals to underprivileged families', website='https://feedthehungry.org'),
-                Charity(name='Education for All', description='Supporting education for disadvantaged children', website='https://educationforall.org'),
-                Charity(name='Clean Water Foundation', description='Bringing clean water to rural communities', website='https://cleanwater.org'),
-                Charity(name='Medical Aid Society', description='Providing healthcare to those in need', website='https://medicalaid.org'),
-                Charity(name='Environmental Care', description='Protecting our environment for future generations', website='https://environmentalcare.org'),
-            ]
-            db.session.bulk_save_objects(sample_charities)
-            db.session.commit()
-            print("Sample charities added.")
-        else:
-            print("Charities already exist in database.")
-    except Exception as e:
-        print(f"Error seeding charities: {e}")
-
 def get_cart():
     return session.get('cart', {})
 
@@ -656,6 +631,8 @@ def logout():
     flash("Logged out successfully!", "info")
     return redirect(url_for('index'))
 
+
+
 # -------------------- API --------------------
 @app.route('/api/products')
 def api_products():
@@ -673,6 +650,6 @@ def api_products():
 if __name__ == '__main__':
     app.secret_key = app.config['SECRET_KEY']
     with app.app_context():
-         db.create_all()
-         init_db()
+        db.create_all()
+        init_db()
     app.run(host='0.0.0.0', port=5000, debug=True)
